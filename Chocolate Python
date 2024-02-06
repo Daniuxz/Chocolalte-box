@@ -1,1 +1,68 @@
-22122721
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Dimensiones y colores
+lado_grande = 300
+color_gris = [0.5, 0.5, 0.5]
+lado_pequeno = lado_grande // 3
+color_marron_oscuro = [0.1, 0.07, 0.02]
+colores_figuras_actualizados = [[0x65 / 0xff, 0x43 / 0xff, 0x21 / 0xff],
+                                [0x97 / 0xff, 0x70 / 0xff, 0x3c / 0xff]]
+color_franja1 = [0x57 / 0xff, 0x2f / 0xff, 0x17 / 0xff]
+color_franja2 = [0x3d / 0xff, 0x28 / 0xff, 0x14 / 0xff]
+color_puntitos = [0xe8 / 0xff, 0xcb / 0xff, 0x9a / 0xff]
+radio_aumentado = int(lado_pequeno * 0.35)
+
+# Círculo
+def dibujar_circulo(imagen, centro, radio, color):
+    for y in range(centro[1] - radio, centro[1] + radio + 1):
+        for x in range(centro[0] - radio, centro[0] + radio + 1):
+            if (x - centro[0])**2 + (y - centro[1])**2 <= radio**2:
+                imagen[y, x] = color
+
+# Franjas de chocolate
+def dibujar_franjas_inclinadas(imagen, centro, radio, color_franja, grosor_franja=5, espacio_franja=15):
+    angulo = np.deg2rad(45)
+    cos_angulo = np.cos(angulo)
+    sin_angulo = np.sin(angulo)
+    for y in range(centro[1] - radio, centro[1] + radio + 1):
+        for x in range(centro[0] - radio, centro[0] + radio + 1):
+            if (x - centro[0])**2 + (y - centro[1])**2 <= radio**2:
+                dx = x - centro[0]
+                dy = y - centro[1]
+                x_rotado = dx * cos_angulo + dy * sin_angulo
+                if x_rotado % espacio_franja < grosor_franja:
+                    imagen[y, x] = color_franja
+
+# Puntitos
+def dibujar_puntitos(imagen, centro, radio, color_puntitos, densidad_puntitos=0.02):
+    np.random.seed(0)
+    for _ in range(int(radio**2 * np.pi * densidad_puntitos)):
+        angulo = np.random.uniform(0, 2 * np.pi)
+        distancia = np.random.uniform(0, radio)
+        x = int(centro[0] + distancia * np.cos(angulo))
+        y = int(centro[1] + distancia * np.sin(angulo))
+        if (x - centro[0])**2 + (y - centro[1])**2 <= radio**2:
+            imagen[y, x] = color_puntitos
+
+# Sacar imagen creo
+imagen = np.full((lado_grande, lado_grande, 3), color_gris, dtype=np.float32)
+for i in range(3):
+    for j in range(3):
+        x_inicio = i * lado_pequeno
+        y_inicio = j * lado_pequeno
+        imagen[y_inicio:y_inicio + lado_pequeno, x_inicio:x_inicio + lado_pequeno] = color_marron_oscuro
+        centro = (x_inicio + lado_pequeno // 2, y_inicio + lado_pequeno // 2)
+        color_figura = colores_figuras_actualizados[(i * 3 + j) % len(colores_figuras_actualizados)]
+        dibujar_circulo(imagen, centro, radio_aumentado, color_figura)
+        if (i + j) % 2 == 0:
+            color_franja = color_franja1 if (i * 3 + j) % 2 == 0 else color_franja2
+            dibujar_franjas_inclinadas(imagen, centro, radio_aumentado, color_franja)
+        else:
+            dibujar_puntitos(imagen, centro, radio_aumentado, color_puntitos)
+
+# Mostrar imagen
+plt.figure(figsize=(6, 6))
+plt.imshow(imagen)
+plt.axis('off')
+plt.show()
